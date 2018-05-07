@@ -1,0 +1,189 @@
+---
+title: "R语言代码规范"
+author: "HaiyanJiang"
+date: "2018年5月7日"
+output: html_document
+---
+
+# R语言的代码规范
+R作为一个高级程序语言主要是用来统计计算和做图。对R语言代码进行规范便于代码的阅读。下面这些规范整理自google的R社区共同讨论的结果（Google's R Style Guide）
+
+## 1、一般性规则
+
+- 避免使用attach
+- 写函数是尽量少的使用stop()
+- 定义S3和S4的对象不要混在一起使用
+
+
+## 2、文件命名
+
+- 以.r结束文件，尽可能的增加信息在文件名里面，
+- 比如 `Good: predict_ad_revenue.R`, `Bad: foo.R`
+
+## 3、变量名和函数命名规则
+注意，在R环境下，大小写是敏感的。
+
+- 变量名应该都用小写字母，单词间用.分隔；
+- 函数名用每个单词用大写字母开头，不用.连接。`BigCamelName`
+- 常数项跟函数一样命名但以小k开头。
+
+例子：
+
++ 变量：
+`Good:
+avg.clicks
+`
+`
+Bad:
+avg_Clicks, avgClicks
+`
+
++ 函数名: 用动词命名函数,
+`Good:
+CalculateAvgClicks
+`
+`
+Bad:
+calculate_avg_clicks, calculateAvgClicks
+`
+
+
++ 常数项：`kConstantName`
+
+
+## 4、R语句
+这个可能是最快的，使代码外观变”漂亮”的规则了
+
+- 每行最长80个字符。
+- 代码缩进时，空两格。
+- 二次运算符（=，+，-，<-，等）两端用空格。
+- 逗号前不用空格，但逗号后一定得用。
+
+GOOD:
+
+- `tabPrior <- table(df[df$daysFromOpt < 0, "campaignid"])`
+- `total <- sum(x[, 1])`
+- `total <- sum(x[1, ])`
+
+
+BAD:
+
+- `tabPrior <- table(df[df$daysFromOpt<0, "campaignid"])  # Needs spaces around '<'`
+- `tabPrior <- table(df[df$daysFromOpt < 0,"campaignid"])  # Needs a space after the comma`
+- `tabPrior<- table(df[df$daysFromOpt < 0, "campaignid"]) # Needs a space before <-`
+- `tabPrior<-table(df[df$daysFromOpt < 0, "campaignid"]) # Needs spaces around <-`
+- `total <- sum(x[,1]) # Needs a space after the comma`
+- `total <- sum(x[ ,1]) # Needs a space after the comma, not before`
+
+
+- 这里包含了赋值、逻辑符号以及逗点分隔。
+- 在R里面尽量少用 =
+- 括号左边用空格，调用函数时除外: `Good: if (debug)`, `Bad: if(debug)`
+- 可以有多余的空格（一行中有多个空格），如果这能够改善符号间的对齐。
+`plot(x = xCoord, 
+y = dataMat[, makeColName(metric, ptiles[1], "roiOpt")], 
+ylim = ylim,
+xlab = "dates",
+ylab = metric,
+main = (paste(metric, " for 3 samples ", sep="")))
+`
+- 括号或方括号内不用空格，逗号后面除外。`GOOD: if (debug) x[1, ]`
+`BAD: 
+if ( debug ) # No spaces around debug
+x[1,] # Needs a space after the comma
+`
+
+- 大括号{ 开始的{不能单独成行，结束的}必须单独成行。
+
+- 单独的一个语句应从新的一行开始。
+`BAD:
+if (is.null(ylim)) ylim <- c(0, 0.06)
+if (is.null(ylim)) {ylim <- c(0, 0.06)}
+`
+
+## 5、代码组织
+尤其是做项目的话，以下信息是必须有的：
+
+- 版权声明
+- 作者注释
+- 文件说明，项目目的，输入和输出的说明
+- source() 和 library() 说明
+- 函数定义
+- 其他
+
+
+## 6、注释
+养成良好的注释习惯
+
+- 单行注释以 # 开头，加一个空格
+- 短注释需要在代码后面空两格，然后 # ，再加一个空格
+```r
+# Create histogram of frequency of campaigns by pct budget spent.
+hist(df$pctSpent, 
+breaks = "scott", # method for choosing number of buckets
+main = "Histogram: fraction budget spent by campaignid",
+xlab = "Fraction of budget spent",
+ylab = "Frequency (count of campaignids)")
+```
+
+## 7、函数定义与调用
+函数定义应该先列出语句中没有默认值，然后是默认值。
+在函数定义和调用时，允许每行多个语句，一般只是在赋值时才换行。
+
+GOOD:
+```r
+PredictCTR <- function(query, property, numDays,
+showPlot = TRUE)
+```
+BAD:
+```
+PredictCTR <- function(query, property, numDays, showPlot =
+TRUE)
+```
+
+## 8、 函数归档
+
+应该在函数定义的下一行进行注释，
+
+- 包括描述函数的作用；
+- 描述语句中的参数用Args：
+- 描述数据类型；
+- 描述返回值用Returns:
+
+注释部分应尽可能详细，以便读者再不看代码时就能应用该函数。
+比如：
+```{r}
+# Example Function
+CalculateSampleCovariance <- function(x, y, verbose = TRUE) {
+# Computes the sample covariance between two vectors.
+#
+# Args:
+# x: One of two vectors whose sample covariance is to be calculated.
+# y: The other vector. x and y must have the same length, greater than one,
+# with no missing values.
+# verbose: If TRUE, prints sample covariance; if not, not. Default is TRUE.
+#
+# Returns:
+# The sample covariance between x and y.
+n <- length(x)
+# Error handling
+if (n <= 1 || n != length(y)) {
+    stop("Arguments x and y have invalid lengths: ",
+    length(x), " and ", length(y), ".")
+}
+if (TRUE %in% is.na(x) || TRUE %in% is.na(y)) {
+    stop(" Arguments x and y must not have missing values.")
+}
+covariance <- var(x, y)
+if (verbose)
+    cat("Covariance = ", round(covariance, 4), ".\n", sep = "")
+return(covariance)
+}
+```
+
+## 9、任务间代码风格应保持一致
+TODO(username): Explicit description of action to be taken
+
+结语:
+代码书写的规范遵循常识和一致性原则。书写规范的代码有利于让读者集中精力到你所写的而不是辨别你是怎样写的（让代码清淅易懂）。
+
