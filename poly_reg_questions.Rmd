@@ -1,0 +1,119 @@
+---
+title: "R Notebook"
+author: "HaiyanJiang"
+date: "2018年5月7日"
+output: html_document
+# output: html_notebook
+---
+
+## What does the R function `poly` really do?
+
+[Some summary notes form this question.](https://stackoverflow.com/questions/19484053/what-does-the-r-function-poly-really-do)
+
+
+
+I have read through the manual page `?poly` (which I admit I did not completely comphrehend) and also read the description of the function in book [Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/). 
+
+My current understanding is that a call to `poly(horsepower, 2)` should be equivalent to writing `horsepower + I(horsepower^2)`. However, this seems to be contradicted by the output of the following code:
+
+```{r}
+library(ISLR)
+summary(lm(mpg~poly(horsepower,2), data=Auto))$coef
+
+summary(lm(mpg~horsepower+I(horsepower^2), data=Auto))$coef
+
+```
+
+My question is, why don't the outputs match, and what is `poly` really doing?
+
+
+## Answer1: 
+
+Try `poly(horsepower, degree=2, raw=TRUE)`, and raw defaults to FALSE.
+`poly(horsepower, 2, raw = TRUE)` would have the same result as that of using `horsepower+I(horsepower^2)`.
+
+
+```{r}
+fm2raw <- lm(mpg ~ poly(horsepower, 2, raw = TRUE), data=Auto)
+cbind(coef(fm2raw))
+
+fm2I <- lm(mpg ~ horsepower+I(horsepower^2), data=Auto)
+cbind(coef(fm2I))
+
+```
+
+
+## Answer2
+
+When introducing polynomial terms in a statistical model, the usual motivation is to determine whether the response is "curved" and whether the curvature is "significant" when that term is added in. The upshot (the upshot is the final result, usually a surprising result, 通常指出乎意外的结果) of throwing in an `+ I(x^2)` terms is that **minor deviations may get "magnified" by the fitting process depending on their location**, 
+and **misinterpreted as due to the curvature term when they were just fluctuations at one end or other of the range of data**. This results in inappropriate assignment of declarations of "significance".
+
+If you just throw in a squared term with `I(x^2)`, of necessity it's also going to be highly correlated with `x` at least in the domain where `x > 0`. Using instead `poly(x, 2)`, which creates a "curved" set of variables where the linear term is not so highly correlated with `x`, and where the curvature is roughly the same across the range of data. (If you want to read up on the statistical theory, search on "orthogonal polynomials".) Just type `poly(1:10, 2)` and look at the two columns.
+
+
+```{r}
+poly(1:10, 2)
+
+```
+
+[The "quadratic" term is centered on 5.5 and the linear term has been shifted down, so it is 0 at the same x-point (with the implicit (Intercept) term in the model being depended upon for shifting everything back at the time predictions are requested.), 不太懂！]
+
+
+## Answer3
+
+To get ordinary polynomials as in the question use `raw = TRUE`. Unfortunately there is an undesirable aspect with ordinary polynomials in regression. If we fit a quadratic, and then a cubic the lower order coefficients of the cubic are all different from that of the quadratic, i.e. `56.900099702, -0.466189630, 0.001230536` for the quadratic vs. `6.068478e+01, -5.688501e-01, 2.079011e-03` after refitting with a cubic below.
+
+```{r}
+library(ISLR)
+fm2raw <- lm(mpg ~ poly(horsepower, 2, raw = TRUE), Auto)
+cbind(coef(fm2raw))
+
+fm3raw <- lm(mpg ~ poly(horsepower, 3, raw = TRUE), Auto)
+cbind(coef(fm3raw))
+```
+
+What we would really like is to add the cubic term in such a way that the lower order coefficients that were fitted using the quadratic stay the same after refitting with a cubic fit. To do this take **linear combinations of the columns** of `poly(horsepower, 2, raw = TRUE)` and do the same with `poly(horsepower, 3, raw = TRUE)` such that the columns in the quadratic fit are *orthogonal* to each other and similarly for the cubic fit. That is **sufficient** to guarantee that the lower order coefficients won't change when we add higher order coefficients. Note how the first three coefficients are now the same in the two sets below (whereas above they differ). That is, in both cases below the 3 lower order coefficients are `23.44592, -120.13774 and 44.08953`.
+
+
+```{r}
+fm2 <- lm(mpg ~ poly(horsepower, 2), Auto)
+cbind(coef(fm2))
+
+fm3 <- lm(mpg ~ poly(horsepower, 3), Auto)
+cbind(coef(fm3))
+
+```
+
+Importantly, since the columns of `poly(horsepwer, 2)` are just **linear combinations of the columnns** of `poly(horsepower, 2, raw = TRUE)` the two quadratic models (orthogonal and raw) represent the same models (i.e. they give the same predictions) and only differ in parameterization. For example, the fitted values are the same:
+```{r}
+all.equal(fitted(fm2), fitted(fm2raw))
+```
+
+We can also verify that the polynomials do have orthogonal columns which are also orthogonal to the intercept:
+```{r}
+nr <- nrow(Auto)
+e <- rep(1, nr) / sqrt(nr) # constant vector of unit length
+p <- cbind(e, poly(Auto$horsepower, 2))
+zapsmall(crossprod(p))
+
+```
+
+
+
+## Answer 4
+
+A quick answer is that `poly` of a vector is `x` essentially equivalent to **the QR decomposition of the matrix** whose columns are powers of x (after centering). For example:
+
+
+```{r}
+x <- rnorm(50)
+x0 <- sapply(1:5, function(z) x^z)
+x1 <- apply(x0, 2, function(z) z - mean(z))
+x2 <- qr.Q(qr(x1))
+cor(x2, poly(x, 5))
+
+# a2 <- poly(x, 5)
+# b2 <- x2 - a2
+
+```
+
