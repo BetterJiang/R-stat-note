@@ -1,0 +1,239 @@
+---
+title: "multiple ggplot"
+author: "Haiyan Jiang"
+date: "2016年12月20日"
+output: html_document
+---
+
+To arrange multiple ggplot2 graphs on the same page, the standard R functions - par() and layout() - cannot be used.
+This R tutorial will show you, step by step, how to put several ggplots on a single page.
+The functions grid.arrange()[in the package gridExtra] and plot_grid()[in the package cowplot], will be used.
+
+```{r}
+# install.packages("gridExtra")
+library(gridExtra)
+
+# install.packages("cowplot")
+library(cowplot)
+# as follow using devtools package (devtools should be installed before using the code below):
+# devtools::install_github("wilkelab/cowplot")
+```
+
+Prepare some data
+```{r}
+df <- ToothGrowth
+# Convert the variable dose from a numeric to a factor variable
+df$dose <- as.factor(df$dose)
+head(df)
+```
+
+Cowplot: Publication-ready plots
+The cowplot package is an extension to ggplot2 and it can be used to provide a publication-ready plots.
+```{r}
+library(cowplot)
+# Default plot
+bp <- ggplot(df, aes(x=dose, y=len, color=dose)) +
+  geom_boxplot() + 
+  theme(legend.position = "none")
+bp
+# Add gridlines
+bp + background_grid(major = "xy", minor = "none")
+
+```
+Recall that, the function ggsave()[in ggplot2 package] can be used to save ggplots. However, when working with cowplot, the function save_plot() [in cowplot package] is preferred. It’s an alternative to ggsave with a better support for multi-figure plots.
+
+```{r}
+save_plot("mpg.pdf", bp, base_aspect_ratio = 1.3) # make room for figure legend
+
+```
+
+Arranging multiple graphs using cowplot
+```{r}
+# Scatter plot
+head(mpg)
+sp <- ggplot(mpg, aes(x=cty, y=hwy, colour=factor(cyl)) ) + 
+  geom_point(size=3)
+sp
+# Bar plot
+head(diamonds)
+bp <- ggplot(diamonds, aes(x=clarity, fill = cut)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle=70, vjust=0.5))
+bp
+
+# Combine the two plots (the scatter plot and the bar plot):
+plot_grid(sp, bp, labels=c("A", "B"), ncol = 2, nrow = 1)
+```
+
+The function draw_plot() can be used to place graphs at particular locations with a particular sizes. The format of the function is:
+
+draw_plot(plot, x = 0, y = 0, width = 1, height = 1)
+plot: the plot to place (ggplot2 or a gtable)
+x: The x location of the lower left corner of the plot.
+y: The y location of the lower left corner of the plot.
+width, height: the width and the height of the plot
+```{r}
+
+```
+
+```{r}
+head(iris)
+plot.iris <- ggplot(iris, aes(Sepal.Length, Sepal.Width)) + 
+  geom_point() + facet_grid(. ~ Species) + stat_smooth(method = "lm") +
+  background_grid(major = 'y', minor = "none") + # add thin horizontal lines 
+  panel_border() # and a border around each panel
+# plot.mpt and plot.diamonds were defined earlier
+```
+
+
+
+Scatter plot with marginal density plots
+Step 1/3. Create some data :
+
+```{r}
+set.seed(1234)
+x <- c(rnorm(500, mean = -1), rnorm(500, mean = 1.5))
+y <- c(rnorm(500, mean = 1), rnorm(500, mean = 1.7))
+group <- as.factor(rep(c(1,2), each=500))
+df2 <- data.frame(x, y, group)
+head(df2)
+```
+
+Step 2/3. Create the plots:
+```{r}
+# Scatter plot of x and y variables and color by groups
+scatterPlot <- ggplot(df2,aes(x, y, color=group)) + 
+  geom_point() +  
+  scale_color_manual(values = c('#999999','#E69F00')) + 
+  theme(legend.position=c(0,1), legend.justification=c(0,1))
+
+# Marginal density plot of x (top panel)
+xdensity <- ggplot(df2, aes(x, fill=group)) + 
+  geom_density(alpha=.5) + 
+  scale_fill_manual(values = c('#999999','#E69F00')) + 
+  theme(legend.position = "none")
+# Marginal density plot of y (right panel)
+ydensity <- ggplot(df2, aes(y, fill=group)) + 
+  geom_density(alpha=.5) + 
+  scale_fill_manual(values = c('#999999','#E69F00')) + 
+  theme(legend.position = "none")
+
+```
+
+Insert an external graphical element inside a ggplot
+
+The function annotation_custom() [in ggplot2] can be used for adding tables, plots or other grid-based elements. The simplified format is :
+
+annotation_custom(grob, xmin, xmax, ymin, ymax)
+grob: the external graphical element to display
+xmin, xmax : x location in data coordinates (horizontal location)
+ymin, ymax : y location in data coordinates (vertical location)
+
+The different steps are :
+
+Create a scatter plot of y = f(x)
+Add, for example, the box plot of the variables x and y inside the scatter plot using the function annotation_custom()
+As the inset box plot overlaps with some points, a transparent background is used for the box plots.
+
+```{r}
+# Create a transparent theme object
+transparent_theme <- theme(
+ axis.title.x = element_blank(),
+ axis.title.y = element_blank(),
+ axis.text.x = element_blank(), 
+ axis.text.y = element_blank(),
+ axis.ticks = element_blank(),
+ panel.grid = element_blank(),
+ axis.line = element_blank(),
+ panel.background = element_rect(fill = "transparent",colour = NA),
+ plot.background = element_rect(fill = "transparent",colour = NA))
+
+```
+
+```{r}
+
+
+set.seed(1234)
+x <- c(rnorm(500, mean = -1), rnorm(500, mean = 1.5))
+y <- c(rnorm(500, mean = 1), rnorm(500, mean = 1.7))
+group <- as.factor(rep(c(1,2), each=500))
+df2 <- data.frame(x, y, group)
+head(df2)
+
+# Scatter plot of x and y variables and color by groups
+scatterPlot <- ggplot(df2,aes(x, y, color=group)) + 
+  geom_point() +  
+  scale_color_manual(values = c('#999999','#E69F00')) + 
+  theme(legend.position=c(0,1), legend.justification=c(0,1))
+
+
+p1 <- scatterPlot # see previous sections for the scatterPlot
+# Box plot of the x variable
+p2 <- ggplot(df2, aes(factor(1), x)) + 
+  geom_boxplot(width=0.3) + coord_flip() + 
+  transparent_theme
+# Box plot of the y variable
+p3 <- ggplot(df2, aes(factor(1), y)) + 
+  geom_boxplot(width=0.3) + 
+  transparent_theme
+# Create the external graphical elements
+# called a "grop" in Grid terminology
+p2_grob = ggplotGrob(p2)
+p3_grob = ggplotGrob(p3)
+   
+# Insert p2_grob inside the scatter plot
+xmin <- min(x); xmax <- max(x)
+ymin <- min(y); ymax <- max(y)
+p1 + annotation_custom(grob = p2_grob, xmin = xmin, xmax = xmax, 
+                       ymin = ymin-1.5, ymax = ymin+1.5)
+
+# Insert p3_grob inside the scatter plot
+p1 + annotation_custom(grob = p3_grob,
+                       xmin = xmin-1.5, xmax = xmin+1.5, 
+                       ymin = ymin, ymax = ymax)
+
+
+```
+
+
+```{r}
+
+# Dummy plot
+df <- data.frame(x = 1:10, y = 1:10)
+base <- ggplot(df, aes(x, y)) +
+  geom_blank() +
+  theme_bw()
+
+base + annotation_custom(
+  grob = grid::roundrectGrob(),
+  xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf)
+
+
+# Inset plot
+df2 <- data.frame(x = 1 , y = 1)
+g <- ggplotGrob(ggplot(df2, aes(x, y)) +
+  geom_point() +
+  theme(plot.background = element_rect(colour = "black")))
+base +
+  annotation_custom(grob = g, xmin = 1, xmax = 10, ymin = 8, ymax = 10)
+
+```
+
+
+```{r}
+x <- seq(0, 4 * pi, 0.1)
+n <- length(x)
+y1 <- 0.5 * runif(n) + sin(x)
+y2 <- 0.5 * runif(n) + cos(x) - sin(x)
+plot(x, y1, col = "blue", pch = 20)
+points(x, y2, col = "red", pch = 20)
+
+library(ggplot2)
+df <- data.frame(x, y1, y2)
+ggplot(df, aes(x, y = value, color = variable)) + 
+    geom_point(aes(y = y1, col = "y1")) + 
+    geom_point(aes(y = y2, col = "y2"))
+
+
+```
+

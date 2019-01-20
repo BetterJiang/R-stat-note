@@ -1,0 +1,101 @@
+
+\documentclass[UTF8, a4paper, 11pt, onecolumn]{article}
+% save as tex UTF8 coding, run as pdfTexify
+\usepackage{CTEX}
+
+\usepackage{amsmath,amsfonts,amssymb} % Math packages
+\usepackage{bm} %%\bm{}来加粗
+
+\def \Pr{\mathrm{Pr}}
+\def \exp{\textrm{exp}}
+
+
+\begin{document}
+
+
+
+\begin{center}
+{\Large {\bf 级数收敛与发散(2018/05/12)}} \\
+\end{center}
+
+
+Suppose $\sum x_n$ converges. Given a positive $\varepsilon$; let $S: (0,\infty)\to \Bbb N$, $S(\varepsilon)$ give the \textbf{smallest} $N$ such that $|x - \sum^N x_n| < \varepsilon$. This measures convergence, in some sense.
+
+Suppose $\sum x_n$ diverges to positive infinity. Given a positive $M$, let $S: (0,\infty)\to \Bbb N$, $S(M)$ give the \textbf{smallest} $N$ such that $|\sum^N x_n|>M$. This measures divergence, in some sense.
+
+As an example, if $x_n=1/n$, then $S(N)\sim e^N$, this says that the divergence $\sum x_n$ is very slow. That is, \textbf{the larger $S(N)$ is, the slower the series diverges.}
+
+For convergence, we're worried at what happens with $S(\varepsilon)$ as $\varepsilon\to 0$. For $S(M)$, we're interested at what happens as $M\to\infty$.
+
+
+We define the sum of an infinite sequence $a_1,a_2,\dots$ to be the limit of its partial sums:
+\begin{equation*}
+  \sum_{k=1}^\infty a_k = \lim_{N\to\infty}\sum_{k=1}^N a_k.
+\end{equation*}
+The series converges quickly if the limit of partial sums converges quickly; the series converges slowly if the limit converges slowly. Similarly, the series diverges quickly if the limit goes to infinity very quickly and diverges slowly if the limit goes to infinity very slowly.
+
+In the interest of being more concrete -- I never said what I meant by "slowly" or "quickly", did I? -- let me give you a few examples.
+\begin{itemize}
+  \item The divergent series $\sum_{k=1}^\infty 1$ has partial sum $n$; it diverges as quickly as $n$ grows.
+  \item The divergent series $\sum_{k=1}^\infty 1/k $ has partial sum very close to $\log n$, meaning that it diverges very slowly. To reach a sum greater than 100, for example, you would need to add up something like the first $3\times10^{43}$ terms.
+  \item The convergent series $\sum_{k=0}^\infty (-1)^k/k!$ , which sums to $e^{-1}$, converges quickly: the difference between the $n$-th partial sum and the sum of the series is no more than $1/(n+1)!$. This follows from basic properties of alternating series. To calculate $e^{-1}$ to 5 decimal places you would have to add the first 8 terms of the series.
+  \item The convergent series $\sum_{k=1}^\infty (-1)^k/k$, which sums to $\ln 2$, converges much more slowly, to calculate $\ln 2$ to $5$ decimal places you would need to add the first $500000$ terms.
+\end{itemize}
+
+The reciprocals of the positive integers produce a divergent series (harmonic series):
+\begin{equation*}
+  {1 \over 1}+{1 \over 2}+{1 \over 3}+{1 \over 4}+{1 \over 5}+{1 \over 6}+\cdots \rightarrow \infty .
+\end{equation*}
+
+Alternating the signs of the reciprocals of positive integers produces a convergent series:
+\begin{equation*}
+  {1 \over 1}-{1 \over 2}+{1 \over 3}-{1 \over 4}+{1 \over 5}\cdots =\ln(2)
+\end{equation*}
+
+The reciprocals of prime numbers produce a divergent series (so the set of primes is "large"):
+\begin{equation*}
+  {1 \over 2}+{1 \over 3}+{1 \over 5}+{1 \over 7}+{1 \over 11}+{1 \over 13}+\cdots \rightarrow \infty
+\end{equation*}
+
+The reciprocals of triangular numbers produce a convergent series:
+\begin{equation*}
+  {1 \over 1}+{1 \over 3}+{1 \over 6}+{1 \over 10}+{1 \over 15}+{1 \over 21}+\cdots =2
+\end{equation*}
+
+The reciprocals of factorials produce a convergent series (see e):
+\begin{equation*}
+  {\frac {1}{1}}+{\frac {1}{1}}+{\frac {1}{2}}+{\frac {1}{6}}+{\frac {1}{24}}+{\frac {1}{120}}+\cdots =e
+\end{equation*}
+
+The reciprocals of square numbers produce a convergent series (the Basel problem):
+\begin{equation*}
+  {1 \over 1}+{1 \over 4}+{1 \over 9}+{1 \over 16}+{1 \over 25}+{1 \over 36}+\cdots ={\pi ^{2} \over 6}.
+\end{equation*}
+
+The reciprocals of powers of 2 produce a convergent series (so the set of powers of 2 is "small"):
+\begin{equation*}
+  {1 \over 1}+{1 \over 2}+{1 \over 4}+{1 \over 8}+{1 \over 16}+{1 \over 32}+\cdots =2.
+\end{equation*}
+
+The reciprocals of powers of any n produce a convergent series:
+\begin{equation*}
+  {\displaystyle {1 \over 1}+{1 \over n}+{1 \over n^{2}}+{1 \over n^{3}}+{1 \over n^{4}}+{1 \over n^{5}}+\cdots ={n \over n-1}.}
+\end{equation*}
+
+Alternating the signs of reciprocals of powers of 2 also produces a convergent series:
+\begin{equation*}
+  {1 \over 1}-{1 \over 2}+{1 \over 4}-{1 \over 8}+{1 \over 16}-{1 \over 32}+\cdots ={2 \over 3}.
+\end{equation*}
+
+Alternating the signs of reciprocals of powers of any n produces a convergent series:
+\begin{equation*}
+  {\displaystyle {1 \over 1}-{1 \over n}+{1 \over n^{2}}-{1 \over n^{3}}+{1 \over n^{4}}-{1 \over n^{5}}+\cdots ={n \over n+1}.}
+\end{equation*}
+
+The reciprocals of Fibonacci numbers produce a convergent series:
+\begin{equation*}
+  {\frac {1}{1}}+{\frac {1}{1}}+{\frac {1}{2}}+{\frac {1}{3}}+{\frac {1}{5}}+{\frac {1}{8}}+\cdots =\psi
+\end{equation*}
+
+
+\end{document}

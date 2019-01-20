@@ -1,0 +1,391 @@
+---
+title: "ggplot2 Bar and line graphs"
+author: "Haiyan Jiang"
+date: "2017年1月3日"
+output: html_document
+---
+
+# Bar and line graphs of ggplot2
+
+## Basic graphs with discrete x-axis
+
+With bar graphs, there are two different things that the heights of bars commonly represent:
+  1. The count of cases for each group – typically, each x value represents one group. This is done with stat_bin, which calculates the number of cases in each group (if x is discrete, then each x value is a group; if x is continuous, then all the data is automatically in one group, unless you specifiy grouping with group=xx). 
+  
+  2. The value of a column in the data set. This is done with stat_identity, which leaves the y values unchanged.
+  
+
+描述统计也是画图，数据可视化也是画图，为啥不放在一起？
+区别在于，描述统计里画图，只是想办法概括一下原始数据。
+然而数据可视化则要画更多的图，用来辅助分析，或是向别人解释我们这群数据分析师究竟在忙活什么东西。
+
+ggplot2的逻辑其实是真正实现了一个图层叠加的概念：一句语句代表一张图，然后再有最小的单元图层。
+ggplot2相比于R基础包的绘图函数的优点：
+第一，有明确的起始（以ggplot函数开始）与终止（一句语句一幅图）；
+其二，图层之间的叠加是靠“+”号实现的，越后面其图层越高；
+其三，绘图更加美观。
+R基础包的绘图函数没有一个停止绘图的标志，这使得有时候再处理会产生一些困惑。
+ggplot2相比于R基础包的绘图函数的缺点：R基础包的绘图函数在做参数修改的时候，我们往往可以很方便地直接用一句单独的命令修改，比如对于x轴的调整，觉得不满意就可以写命令直接调整。而ggplot2则意味着要重新作图。
+
+## 1、ggplot2的逻辑。
+
+ggplot2的逻辑在我看来其实是真正实现了一个图层叠加的概念：一句语句代表一张图，然后再有最小的单元图层。这个与其他命令式的绘图完全不同，来做个比较:
+```{r}
+
+#这是基于graphic包里例子
+x <- rnorm(100,14,5)
+y <- x + rnorm(100,0,1)
+plot(x,y)
+text(13,20, expression(x[1] == x[2]))
+
+```
+
+再来看ggplot2的代码：
+
+```{r}
+library(ggplot2)
+x <- rnorm(100,14,5) 
+y <- x + rnorm(100,0,1) 
+ggplot(data= NULL, aes(x = x, y = y)) +  #开始绘图
+  geom_point(color = "darkred") +  #添加点
+  annotate("text", x =13 , y = 20, parse = T, label = "x[1] == x[2]") #添加注释
+
+```
+
+我们可以发现，ggplot的绘图有以下几个特点:
+第一，有明确的起始（以ggplot函数开始）与终止（一句语句一幅图）；
+其二，图层之间的叠加是靠“+”号实现的，越后面其图层越高。
+
+
+## 2. ggplot2的要素
+
+我们这里不谈qplot（quickly plotting）方法，单纯谈ggplot方法。
+不谈底层的实现思想，我们简单地理解，ggplot图的元素可以主要可以概括如下：
+最大的是plot（指整张图，包括background和title），
+其次是axis（包括stick，text，title和stick）、legend（包括backgroud、text、title）、facet这是第二层次，其中facet可以分为外部strip部分（包括backgroud和text）和内部panel部分（包括backgroud、boder和网格线grid，其中粗的叫grid.major，细的叫grid.minor）。
+
+## 3. ggplot2图层以及其他函数的分类
+
+好了，现在把这些理念的东西讲完了之后，下面来理解ggplot2里的绘图命令。
+ggplot2里的所有函数可以分为以下几类：
+用于运算（我们在此不讲，如fortify\_，mean\_等）
+初始化、展示绘图等命令（ggplot，plot，print等）
+按变量组图（facet_等）
+真正的绘图命令（stat\_，geom\_，annotate），这三类就是实现一个函数一个图层的核心函数。
+微调图型：严格意义上说，这一类函数不是再实现图层，而是在做局部调整。
+scale_：直译为标尺，这就是与aes内的各种美学（shape、color、fill、alpha）调整有关的函数。
+guides：调整所有的text。
+coord_：调整坐标。
+theme：调整不与数据有关的图的元素的函数。
+
+
+```{r}
+# ggplot2里的所有函数可以分为以下几类：
+# 用于运算（我们在此不讲，如fortify_，mean_等）
+# 初始化、展示绘图等命令（ggplot，plot，print等）
+# 按变量组图（facet_等）
+# 真正的绘图命令（stat_，geom_，annotate），这三类就是实现一个函数一个图层的核心函数。
+# 微调图型：严格意义上说，这一类函数不是再实现图层，而是在做局部调整。
+# scale_：直译为标尺，这就是与aes内的各种美学（shape、color、fill、alpha）调整有关的函数。
+# guides：调整所有的text。
+# coord_：调整坐标。
+# theme：调整不与数据有关的图的元素的函数。
+
+```
+
+
+## 4. 绘图
+
+第一步：初始化。ggplot2风格的绘图的第一步就是初始化，
+说白了就是载入数据空间、选择数据以及选择默认aes。
+```{r}
+# p <- ggplot(data = , aes(x = , y = ))
+```
+
+
+data就是载入你要画的数据所在的数据框，指定为你的绘图环境，载入之后，就可以免去写大量的$来提取data.frame之中的向量。
+当然，如果你的数据都是向量，也可不指定，但是要在申明中标注data = NULL，不然就会得到不必要的报错。
+第二个是重头戏，即aes，是美学（aesthetic）的缩写。这是在ggplot2初学者眼里最不能理解的东西，甚至很多老手也会在犹豫，什么时候要把参数写在aes里，什么时候要写在aes外。我们做一个简单的，不非常恰当的解释：** 任何与数据向量顺序相关，需要逐个指定的参数都必须写在aes里**。这之后我们会进一步解释，现在我们初始化的时候，最好只是把关于位置的x和y指定一下就好。
+
+### 第二部，绘制图层。
+
+很多人在解释ggplot2的时候喜欢说，ggplot2绘图有两种函数，一类是geom\_，绘图用的；一类是stat\_，统计变换用的。这样说不是不对，只是很不恰当，很多人就会问出一些问题，比如，统计变换竟然是做运算用的，为什么可以用来画图？为什么stat\_bin和geom\_histgram画出来的图是一样，竟然一样，为什么要重复？
+事实上，任何一个ggplot2图层都包括stat和geom俩部分，或者说两个步骤（其实还包括position）。 而stat_identity则表示不做任何的统计变换。
+
+我们来举个例子，还是上面的代码，为了更直观，我在此作了修改：
+做出的图如下：
+
+
+```{r}
+x <- c(rnorm(100,14,5),rep(20,20)) 
+y <- c(rnorm(100,14,5) + rnorm(100,0,1),rep(20,20))
+ggplot(data= NULL, aes(x = x, y = y)) +  #开始绘图
+  geom_point(color = "darkred")
+
+```
+
+
+我们查看码源，就知道geom_point的默认stat是identity，即不做任何统计变换：
+```{r}
+geom_point
+
+```
+
+
+大家可以发现，我在（20，20）这个点的数据事实上是有20个的，但由于没做统计转换(20,20)这个点被画了20次，因此我们理论上看到的点其实是最后一次画的那个点。可能这不够直观，没关系，我们调整一下透明度到10%：
+
+```{r}
+ggplot(data= NULL, aes(x = x, y = y)) +  #开始绘图
+  geom_point(color = "darkred",alpha = 0.1)
+```
+
+这样应该就很明显了，由于(20,20)点被画了20次，所以透明度会叠加为20*10% = 200%实际只展现100%。
+
+我们现在就使用坐标转换来重新画这个图：
+
+```{r}
+ggplot(data= NULL, aes(x = x, y = y)) + #开始绘图
+geom_point(color = "darkred",stat = "sum")
+```
+
+好了，解释一下，stat_sum实际的意思就是按照某一点占所有点出现频率然后换算成大小来作图，因此，以上代码就可以得到下面这张图，因为(20,20)这个点出现频率为20/120=16.667%：
+
+
+# Basic graphs with discrete x-axis
+
+With bar graphs, there are two different things that the heights of bars commonly represent:
+
+The count of cases for each group – typically, each x value represents one group. This is done with stat_bin, which calculates the number of cases in each group (if x is discrete, then each x value is a group; if x is continuous, then all the data is automatically in one group, unless you specifiy grouping with group=xx).
+The value of a column in the data set. This is done with stat_identity, which leaves the y values unchanged.
+|x axis is	| Height of bar represents | Common name|
+|Continuous | Count | Histogram|
+|Discrete | Count | Bar graph|
+|Continuous | Value | Bar graph|
+|Discrete	| Value | Bar graph|
+
+In ggplot2, the default is to use stat_bin, so that the bar height represents the count of cases.
+
+# Bar graphs of values
+
+Here is some sample data (derived from the tips dataset in the reshape2 package):
+
+```{r}
+dat <- data.frame(
+  time = factor(c("Lunch","Dinner"), levels=c("Lunch","Dinner")),
+  total_bill = c(14.89, 17.23)
+)
+dat
+
+```
+
+In these examples, the height of the bar will represent the value in a column of the data frame. This is done by using stat="identity" instead of the default, stat="bin".
+
+These are the variable mappings used here:
+
+time: x-axis and sometimes color fill
+total_bill: y-axis
+
+```{r}
+library(ggplot2)
+# Very basic bar graph
+ggplot(data=dat, aes(x=time, y=total_bill)) +
+    geom_bar(stat="identity")
+
+
+# Map the time of day to different fill colors
+ggplot(data=dat, aes(x=time, y=total_bill, fill=time)) + 
+  geom_bar(stat="identity")
+
+## This would have the same result as above
+ggplot(data=dat, aes(x=time, y=total_bill)) +
+   geom_bar(aes(fill=time), stat="identity")
+
+# Add a black outline
+ggplot(data=dat, aes(x=time, y=total_bill, fill=time)) +
+    geom_bar(colour="black", stat="identity")
+
+
+# No legend, since the information is redundant
+ggplot(data=dat, aes(x=time, y=total_bill, fill=time)) +
+    geom_bar(colour="black", stat="identity") +
+    guides(fill=FALSE)
+
+
+```
+
+The desired bar graph might look something like this:
+
+```{r}
+# Add title, narrower bars, fill color, and change axis labels
+ggplot(data=dat, aes(x=time, y=total_bill, fill=time)) + 
+    geom_bar(colour="black", fill="#DD8888", width=.8, stat="identity") + 
+    guides(fill=FALSE) +
+    xlab("Time of day") + ylab("Total bill") +
+    ggtitle("Average bill for 2 people")
+
+```
+
+
+# Bar graphs of counts
+
+In these examples, the height of the bar will represent the count of cases. This is done by using stat="bin" (which is the default).
+
+We’ll start with the tips data from the reshape2 package:
+```{r}
+library(reshape2)
+# Look at fist several rows
+head(tips)
+
+```
+To get a bar graph of counts, don’t map a variable to y, and use stat="bin" (which is the default) instead of stat="identity":
+```{r}
+# Bar graph of counts
+ggplot(data=tips, aes(x=day)) +
+    geom_bar(stat="count")
+## Equivalent to this, since stat="bin" is the default:
+ggplot(data=tips, aes(x=day)) +
+   geom_bar()
+
+```
+
+# Line graphs
+
+For line graphs, the data points must be grouped so that it knows which points to connect. In this case, it is simple – all points should be connected, so group=1. When more variables are used and multiple lines are drawn, the grouping for lines is usually done by variable (this is seen in later examples).
+
+These are the variable mappings used here:
+
+  1.time: x-axis
+  
+  2.total_bill: y-axis
+
+
+```{r}
+# Basic line graph
+ggplot(data=dat, aes(x=time, y=total_bill, group=1)) +
+    geom_line()
+## This would have the same result as above
+# ggplot(data=dat, aes(x=time, y=total_bill)) +
+#     geom_line(aes(group=1))
+
+# Add points
+ggplot(data=dat, aes(x=time, y=total_bill, group=1)) +
+    geom_line() +
+    geom_point()
+
+# Change color of both line and points
+# Change line type and point type, and use thicker line and larger points
+# Change points to circles with white fill
+ggplot(data=dat, aes(x=time, y=total_bill, group=1)) + 
+    geom_line(colour="red", linetype="dashed", size=1.5) + 
+    geom_point(colour="red", size=4, shape=21, fill="white")
+
+```
+
+The desired line graph might look something like this:
+```{r}
+
+# Change the y-range to go from 0 to the maximum value in the total_bill column,
+# and change axis labels
+ggplot(data=dat, aes(x=time, y=total_bill, group=1)) +
+    geom_line() +
+    geom_point() +
+    expand_limits(y=0) +
+    xlab("Time of day") + ylab("Total bill") +
+    ggtitle("Average bill for 2 people")
+
+```
+
+
+Graphs with more variables
+
+This data will be used for the examples below:
+
+```{r}
+sex = factor(c("Female","Female","Male","Male"))
+time = factor(c("Lunch","Dinner","Lunch","Dinner"),
+              levels=c("Lunch","Dinner"))
+total_bill = c(13.53, 16.81, 16.24, 17.42)
+
+dat1 <- data.frame(sex, time, total_bill)
+dat1
+
+```
+
+
+This is derived from the tips dataset in the reshape2 package.
+
+Bar graphs These are the variable mappings used here:
+
+time: x-axis
+sex: color fill
+total_bill: y-axis.
+
+```{r}
+# Stacked bar graph -- this is probably not what you want
+ggplot(data=dat1, aes(x=time, y=total_bill, fill=sex)) +
+    geom_bar(stat="identity")
+
+# Bar graph, time on x-axis, color fill grouped by sex -- use position_dodge()
+ggplot(data=dat1, aes(x=time, y=total_bill, fill=sex)) +
+    geom_bar(stat="identity", position=position_dodge())
+
+ggplot(data=dat1, aes(x=time, y=total_bill, fill=sex)) +
+    geom_bar(stat="identity", position=position_dodge(), colour="black")
+
+# Change colors
+ggplot(data=dat1, aes(x=time, y=total_bill, fill=sex)) +
+    geom_bar(stat="identity", position=position_dodge(), colour="black") +
+    scale_fill_manual(values=c("#999999", "#E69F00"))
+
+
+```
+
+It’s easy to change which variable is mapped the x-axis and which is mapped to the fill.
+```{r}
+
+# Bar graph, time on x-axis, color fill grouped by sex -- use position_dodge()
+ggplot(data=dat1, aes(x=sex, y=total_bill, fill=time)) +
+    geom_bar(stat="identity", position=position_dodge(), colour="black")
+
+
+```
+
+
+# Line graphs
+
+These are the variable mappings used here:
+
+time: x-axis
+sex: line color
+total_bill: y-axis.
+To draw multiple lines, the points must be grouped by a variable; otherwise all points will be connected by a single line. In this case, we want them to be grouped by sex.
+
+```{r}
+# Basic line graph with points
+ggplot(data=dat1, aes(x=time, y=total_bill, group=sex)) +
+    geom_line() +
+    geom_point()
+
+# Map sex to color
+ggplot(data=dat1, aes(x=time, y=total_bill, group=sex, colour=sex)) +
+    geom_line() +
+    geom_point()
+
+# Map sex to different point shape, and use larger points
+ggplot(data=dat1, aes(x=time, y=total_bill, group=sex, shape=sex)) +
+    geom_line() +
+    geom_point()
+
+
+# Use thicker lines and larger points, and hollow white-filled points
+ggplot(data=dat1, aes(x=time, y=total_bill, group=sex, shape=sex)) + 
+    geom_line(size=1.5) + 
+    geom_point(size=3, fill="white") +
+    scale_shape_manual(values=c(22,21))
+
+```
+
+
+
+
+

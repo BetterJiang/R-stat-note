@@ -1,0 +1,108 @@
+---
+title: "question of matrix and order by factor"
+author: "Haiyan Jiang"
+date: "2016年12月27日"
+output: html_document
+---
+
+## get rows or columns by names of matrix;
+```{r}
+rm(list = ls())
+setwd("E:/hyjiang/keepInMindR")
+
+myMatrix <- matrix(5:0, nrow=2)
+rownames(myMatrix) <- c("A", "B")
+colnames(myMatrix) <- c("C", "D", "E")
+myMatrix
+
+class(myMatrix)
+attributes(myMatrix)
+
+myMatrix["A", "D"] # row and column;
+myMatrix["A", ]
+myMatrix[, "D"]
+
+m0 <- matrix(NA, 4, 2)
+m0
+rownames(m0)
+colnames(m0)
+
+```
+
+
+## order by factor; 
+```{r}
+sex <- c("M","M","F","M","F","M","M","M","F")
+x <- c("MARK","TOM","SUSAN","LARRY","EMMA","LEONARD","TIM","MATT","VIOLET")
+name <- as.character(x)
+y <- rnorm(9,8,1)
+score <- data.frame(x, y, sex)
+score
+
+```
+
+### order() takes multiple arguments, and it does just what you want:
+```{r}
+# z <- c(10:6)
+# order(z)
+# rank(z)
+# sort(z)
+
+score[order(sex, y, x),] # order not sort
+with(score, score[order(sex, y, x),])
+
+```
+
+
+
+## How to sort a dataframe by column(s)?
+I want to sort a data.frame by multiple columns in R. For example, with the data.frame below I would like to sort by column z (descending) then by column b (ascending):
+
+```{r}
+b = factor(c("Hi", "Med", "Hi", "Low"), levels = c("Low", "Med", "Hi"), ordered = TRUE)
+x = c("A", "D", "A", "C"); y = c(8, 3, 9, 9); z = c(1, 1, 1, 2)
+dd <- data.frame(b, x, y, z)
+dd
+
+```
+You can use the order() function directly without resorting to add-on tools -- see this simpler answer which uses a trick right from the top of the example(order) code:
+
+```{r}
+## the default of order is ascending;
+dd[with(dd, order(-z, b)), ]
+
+```
+Edit some 2+ years later: It was just asked how to do this by column index. The answer is to simply pass the desired sorting column(s) to the order() function:
+rather than using the name of the column (and with() for easier/more direct access).
+
+```{r}
+dd[order(-dd[,4], dd[,1]), ]
+
+```
+
+You can also use the arrange() function as Hadley pointed out in the above thread:
+
+```{r}
+library(plyr)
+arrange(dd,desc(z),b)
+```
+
+There are a lot of excellent answers here, but dplyr gives the only syntax that I can quickly and easily remember (and so now use very often):
+
+```{r}
+library(dplyr)
+# sort mtcars by mpg, ascending... use desc(mpg) for descending
+arrange(mtcars, mpg)
+# sort mtcars first by mpg, then by cyl, then by wt)
+arrange(mtcars , mpg, cyl, wt)
+```
+
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+

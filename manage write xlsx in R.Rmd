@@ -1,0 +1,119 @@
+---
+title: "manage write xlsx in R"
+author: "Haiyan Jiang"
+date: "2016年12月21日"
+output: html_document
+---
+
+http://stackoverflow.com/questions/21937640/handling-java-lang-outofmemoryerror-when-writing-to-excel-from-r
+
+## R: Increase heap size for rJava
+Technically speaking, this is not strictly a Unix Revelation. Still, to me it's useful enough to note this down.
+
+We all know Java runs in a virtual machine, and assigns itself in 80% of the cases too little memory to do some real work. Result? Well, this:
+
+java.lang.OutOfMemoryError: Java heap space
+Sun gave us the -Xmx flag to increase the heap size (and -Xms to increase the stack size).
+
+This works nicely from the commandline, the next challenge was to do something similar from an R environment. Using RWeka, which in turn depends on rJava, I found myself hitting the limit every time (which defaults to 512 MB).
+
+The solution is to supply this -Xmx parameter before the Java Virtual Machine is initialized. From the R shell, invoke this:
+
+```{r}
+options( java.parameters = "-Xmx4g" )
+# library( "RWeka" )
+```
+This will override the default setting and assign 4 gigabytes of heap space to the Java environment. Of course, you still need to have at least that amount of RAM.
+
+
+## rexcel - issue
+
+### What steps will reproduce the problem? 
+
+1. run the attached script. You may have to crank up the number of sheets (ns)
+
+### What is the expected output? What do you see instead? 
+I expect an xlsx to be created, with ns tabs, each containing the same matrix of nc*nr data cells. Instead, I get an error saying "java.lang.OutOfMemoryError: Java heap space". Under other circumstances (e.g. increase the value of ns), I also get a "java.lang.OutOfMemoryError: GC overhead limit exceeded" error.
+
+### What version of the product are you using? On what operating system?
+
+R version 3.3.2 (2016-12-21) Platform: x86-64-unknown-linux-gnu (64-bit) xlsx-0.5.5 xlsxjars-0.5.0 rJava_0.9-6
+
+Please provide any additional information below.
+
+```{r}
+options(java.parameters = "-Xmx1000m")
+library(xlsx)
+wb <- createWorkbook()
+
+ns <- 15L
+nr <- 1000L
+nc <- 50L
+
+#ns <- 10L
+#nr <- 1000L
+#nc <- 50L
+
+for (i in 1:ns) {
+  createSheet(wb, sheetName=paste0("Sheet", i))
+}
+
+sheets <- getSheets(wb)
+x <- matrix(runif(nr*nc), nr, nc)
+
+for (i in 1:ns) {
+  sheet <- sheets[[i]]
+  cb <- CellBlock(sheet, 1L, 1L, nr, nc, create=TRUE)
+  CB.setMatrixData(cb, x, 1L, 1L)
+}
+
+# Error in .jcall("RJavaTools", "Ljava/lang/Object;", "newInstance", .jfindClass(class),  : 
+#   java.lang.OutOfMemoryError: GC overhead limit exceeded
+#   
+# saveWorkbook(wb, "/Quant_Share/florent/text.xlsx")
+
+```
+
+
+options(java.parameters = "-Xmx1000m")
+before library(xlsx) is called. I confirm it solved my issue. Thanks.
+
+------------------------------------------------
+
+his is a known issue: http://code.google.com/p/rexcel/issues/detail?id=33
+
+While unresolved, the issue page links to a solution by Gabor Grothendieck suggesting that the heap size should be increased by setting the java.parameters option before the rJava package is loaded. (rJava is a dependency of xlsx.)
+
+```{r}
+options(java.parameters = "-Xmx1000m")
+```
+
+The value 1000 is the number of megabytes of RAM to allow for the Java heap; it can be replaced with any value you like. My experiments with this suggest that bigger values are better, and you can happily use your full RAM entitlement. For example, I got the best results using:
+
+```{r}
+options(java.parameters = "-Xmx8000m")
+```
+on the machine with 8GB RAM.
+
+A further improvement can be obtained by requesting a garbage collection in each iteration of the loop. We can define a Java garbage collection function as:
+
+```{r}
+jgc <- function()
+{
+  gc()
+  .jcall("java/lang/System", method = "gc")
+}    
+```
+
+
+
+
+```{r}
+options(java.parameters = "-Xmx2048m")  ## memory set to 2 GB
+library(XLConnect)
+```
+
+allow for more memory using "options" before any java component is loaded. 
+Then load XLConnect library (it uses java).
+That's it. Start reading in data with readWorksheet .... and so on. :)
+

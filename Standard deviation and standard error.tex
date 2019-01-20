@@ -1,0 +1,44 @@
+
+\documentclass[UTF8, a4paper, 11pt, onecolumn]{article}
+% save as tex UTF8 coding, run as pdfTexify
+\usepackage{CTEX}
+
+\usepackage{amsmath,amsfonts,amssymb} % Math packages
+\usepackage{bm} %%\bm{}来加粗
+
+\def \Pr{\mathrm{Pr}}
+\def \exp{\textrm{exp}}
+
+
+\begin{document}
+
+
+
+\begin{center}
+{\Large {\bf Standard deviation and standard error(2018/05/12)}} \\
+\end{center}
+标准差与标准误
+Standard deviation and standard error
+(Standard deviation and standard error)
+
+
+standard error 是抽样分布中样本平均数的标准差。因为“抽样分布”这个分布中，所存在的个体数并不是$n$。
+$n$是什么呢？$n$是我们进行随机抽样的时候每一个样本的sample size。
+
+两个概念的联系与区别
+
+联系：
+二者都是标准差。
+
+区别： 
+
+标准差(standard deviation)，某个随机变量的标准差，衡量的是该随机变量的离散度。
+
+标准误(standard error)，也叫抽样标准误，是样本统计量的标准差，衡量的是抽样分布的离散度，对应的随机变量是样本统计量。比如样本均值的标准误(standard error of sample mean)，衡量的就是样本均值的离散度。
+
+
+一般情况下，你不知道一个样本底下的随机变量是什么，但是你一般可以通过样本的各阶矩来估计该随机变量的各阶矩（总体矩）。由于统计量的分布依赖于总体的分布，统计量的矩也依赖于总体的矩。你拿用样本算出来的（总体矩的）估计量，去计算统计量的矩的估计量，就得到了抽样分布的矩。
+
+
+
+\end{document}

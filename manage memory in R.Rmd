@@ -1,0 +1,60 @@
+---
+title: "manage memory in R"
+author: "Haiyan Jiang"
+date: "2016年12月21日"
+output: html_document
+---
+
+## Memory
+A solid understanding of R’s memory management will help you predict how much memory you’ll need for a given task and help you to make the most of the memory you have. It can even help you write faster code because accidental copies are a major cause of slow code. The goal of this chapter is to help you understand the basics of memory management in R, moving from individual objects to functions to larger blocks of code. Along the way, you’ll learn about some common myths, such as that you need to call gc() to free up memory, or that for loops are always slow.
+
+### Outline
+
+* Object size shows you how to use object_size() to see how much memory an object occupies, and uses that as a launching point to improve your understanding of how R objects are stored in memory.
+
+* Memory usage and garbage collection introduces you to the mem\_used() and mem\_change() functions that will help you understand how R allocates and frees memory.
+
+* Memory profiling with lineprof shows you how to use the lineprof package to understand how memory is allocated and released in larger code blocks.
+
+* Modification in place introduces you to the address() and refs() functions so that you can understand when R modifies in place and when R modifies a copy. Understanding when objects are copied is very important for writing efficient R code.
+
+
+
+```{r}
+# install.packages("ggplot2")
+# install.packages("pryr")
+# install.packages("devtools")
+# devtools::install_github("hadley/lineprof")
+
+```
+
+Object size, 
+To understand memory usage in R, we will start with pryr::object_size(). 
+This function tells you how many bytes of memory an object occupies:
+
+
+```{r, echo=FALSE}
+library(pryr)
+vv=1:10
+object_size(vv)
+.ls.objects()
+lsos()
+```
+
+
+## how to remove variables
+```{r}
+Foo <- function(x){
+  Sx <- deparse(substitute(x))
+  rm(list=Sx,envir=sys.frame(-1))
+}
+##
+Z <- 123
+ls()
+
+Foo(x=Z)
+ls()
+```
+
+
+

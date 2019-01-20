@@ -1,0 +1,100 @@
+---
+title: "Poisson and Exponential distribution"
+author: "HaiyanJiang"
+date: "2018年5月9日"
+output: html_document
+---
+
+用 R 生成随机数，得到概率与quantile 的函数一直弄混。可以先从 `norm` 来看，然后类比得到 `poisson` 的。
+
+```
+dnorm(x, mean = 0, sd = 1, log = FALSE)
+pnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+qnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+rnorm(n, mean = 0, sd = 1)
+```
+
+- 生成4个 norm(0, 1) 的随机数
+```{r}
+rnorm(4, mean = 0, sd = 1)
+```
+
+- 得到给定概率下的 `quantile`
+
+| 数值分布在 $(\mu - \sigma, \mu + \sigma)$ 中的概率为 0.6827  
+| 数值分布在 $(\mu - 2 \sigma, \mu + 2 \sigma)$ 中的概率为 0.9545  
+| 数值分布在 $(\mu - 3 \sigma, \mu + 3 \sigma)$ 中的概率为 0.9973 
+
+```{r} 
+p1 <- 1 - (1 - 0.6827) / 2
+p2 <- 1 - (1 - 0.9545) /2
+p3 <- 1 - (1 - 0.9973) /2
+
+c(qnorm(p1),  # u + sigma
+qnorm(p2),  # u + 2sigma
+qnorm(p3)  # u + 3sigma
+)
+```
+
+- `dnorm` gives the density, it is the pdf, `pnorm` gives the distribution function, $Pr(X <= x_0)$.
+```{r}
+# dnorm(x, mean = 0, sd = 1, log = FALSE)
+# pnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+# x, q vector of quantiles.
+
+c(dnorm(0),  # gives the density, it is the pdf
+pnorm(2),  # gives the distribution function, Pr(X <= x0)
+pnorm(0),
+qnorm(1 - 0.05)  # u + 3sigma
+)
+```
+同理，关于 Poisson 的分布函数也可以求得。
+```
+dpois(x, lambda, log = FALSE)
+ppois(q, lambda, lower.tail = TRUE, log.p = FALSE)
+qpois(p, lambda, lower.tail = TRUE, log.p = FALSE)
+rpois(n, lambda)
+```
+
+```{r}
+
+n <- 100
+lambda <- 10
+x <- rpois(n, lambda)
+hist(x)
+
+
+dpois(0, lambda)
+
+
+1 - exp(-1/59.6 * 72)
+
+1 - exp(-0.0168 * 72)
+
+
+
+
+t = seq(0, 2, length.out=100)
+
+plot(3 *exp(-3 *t))
+
+ppois(2, lambda, log.p = TRUE)
+
+rpois(n, lambda)
+```
+
+举个国足的例子(网上看到的，很喜欢这个例子)，假设国足参加了2018年世界杯，国足面对世界强队比赛，平均5场比赛进一个球，即单位分钟时间内发生进球事件的次数为 
+$\lambda = \frac{1}{5 *90} = 0.002222222$。
+那么小组赛3场比赛，至少能进一个球的概率是多少？
+3场小组赛，$3*90 = 270$。
+
+$$
+\Pr(X \leq 270) = \int_{0}^{270} \lambda e ^{-\lambda t} dt 
+= 1 - e ^{-\lambda t} = 0.4512
+$$
+也就是说3场小组赛一个球不进的概率是 $1-0.4512=54.88\%$.
+
+```{r}
+1 - exp(- 1/ (5 * 90) * 270)
+```
+
